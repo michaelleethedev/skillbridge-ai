@@ -1,0 +1,23 @@
+export function PageHeader({
+  title,
+  description,
+  action,
+}: {
+  title: string;
+  description?: string;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h1 className="text-[26px] font-semibold leading-tight tracking-tight text-slate-900">
+          {title}
+        </h1>
+        {description && (
+          <p className="mt-1 text-sm leading-relaxed text-slate-500">{description}</p>
+        )}
+      </div>
+      {action && <div className="flex items-center gap-2">{action}</div>}
+    </div>
+  );
+}
