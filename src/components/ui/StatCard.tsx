@@ -17,7 +17,7 @@ export function StatCard({
   hint?: string;
 }) {
   return (
-    <div className="group rounded-2xl border border-slate-200/80 bg-white p-5 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-card-hover">
+    <div className="group rounded-2xl border border-white/[0.08] bg-[#0d1422] p-5 shadow-[0_18px_50px_-32px_rgba(37,99,235,.35),inset_0_1px_0_rgba(255,255,255,.035)] transition-all duration-200 hover:-translate-y-0.5 hover:border-white/[0.14]">
       <div className="flex items-start justify-between">
         <p className="text-[13px] font-medium text-slate-500">{label}</p>
         <div
@@ -29,7 +29,7 @@ export function StatCard({
           <Icon className="h-5 w-5" />
         </div>
       </div>
-      <p className="mt-3 text-[32px] font-semibold leading-none tracking-tight text-slate-900">
+      <p className="mt-3 text-[32px] font-semibold leading-none tracking-tight text-white">
         {value}
       </p>
       <div className="mt-3 flex items-center gap-2 text-xs">
@@ -38,8 +38,8 @@ export function StatCard({
             className={cn(
               "inline-flex items-center rounded-full px-2 py-0.5 font-semibold ring-1 ring-inset",
               trend.positive
-                ? "bg-emerald-50 text-emerald-700 ring-emerald-600/20"
-                : "bg-amber-50 text-amber-700 ring-amber-600/20",
+                ? "bg-emerald-500/10 text-emerald-300 ring-emerald-400/20"
+                : "bg-amber-500/10 text-amber-300 ring-amber-400/20",
             )}
           >
             {trend.value}

@@ -6,19 +6,19 @@ import { Badge } from "./Badge";
 const config: Record<TrendLabel, { icon: LucideIcon; className: string }> = {
   Improving: {
     icon: TrendingUp,
-    className: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
+    className: "bg-emerald-500/10 text-emerald-300 ring-emerald-400/20",
   },
   Declining: {
     icon: TrendingDown,
-    className: "bg-rose-50 text-rose-700 ring-rose-600/20",
+    className: "bg-rose-500/10 text-rose-300 ring-rose-400/20",
   },
   "No recent session": {
     icon: Clock,
-    className: "bg-slate-100 text-slate-600 ring-slate-500/20",
+    className: "bg-white/[0.06] text-slate-400 ring-white/10",
   },
   "Ready for next skill": {
     icon: Rocket,
-    className: "bg-brand-50 text-brand-700 ring-brand-600/20",
+    className: "bg-blue-500/10 text-blue-300 ring-blue-400/20",
   },
 };
 

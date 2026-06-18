@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Menu, Search, Bell } from "lucide-react";
+import { Menu, Search, Bell, ChevronDown } from "lucide-react";
 import { students, fullName, initials, currentUser } from "@/data";
 import { Avatar } from "@/components/ui/Avatar";
 import { SupportLevelBadge } from "@/components/ui/SupportLevelBadge";
@@ -49,10 +49,10 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-slate-200/80 bg-white/75 px-4 backdrop-blur-xl lg:px-8">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-white/[0.07] bg-[#0a0f1b]/90 px-4 backdrop-blur-xl lg:px-7">
       <button
         onClick={onMenuClick}
-        className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 lg:hidden"
+        className="rounded-lg p-2 text-slate-400 hover:bg-white/[0.06] hover:text-white lg:hidden"
         aria-label="Open menu"
       >
         <Menu className="h-5 w-5" />
@@ -71,15 +71,15 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
           onBlur={() => {
             blurTimeout.current = setTimeout(() => setFocused(false), 150);
           }}
-          placeholder="Search students, subjects, status..."
-          className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/80 pl-9 pr-12 text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-500/10"
+          placeholder="Search students, subjects, skills, or sessions..."
+          className="h-10 w-full rounded-xl border border-white/[0.08] bg-white/[0.045] pl-9 pr-12 text-sm text-slate-100 placeholder:text-slate-500 focus:border-blue-500/70 focus:bg-white/[0.065] focus:outline-none focus:ring-4 focus:ring-blue-500/10"
         />
-        <kbd className="pointer-events-none absolute right-2.5 top-1/2 hidden -translate-y-1/2 items-center gap-0.5 rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-400 sm:flex">
+        <kbd className="pointer-events-none absolute right-2.5 top-1/2 hidden -translate-y-1/2 items-center gap-0.5 rounded-md border border-white/10 bg-white/[0.05] px-1.5 py-0.5 text-[10px] font-medium text-slate-500 sm:flex">
           /
         </kbd>
 
         {focused && query.trim() && (
-          <div className="absolute left-0 right-0 top-12 z-40 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+          <div className="absolute left-0 right-0 top-12 z-40 overflow-hidden rounded-xl border border-slate-700 bg-slate-900 shadow-2xl">
             {results.length === 0 ? (
               <p className="px-4 py-6 text-center text-sm text-slate-500">
                 No matches for “{query}”
@@ -90,11 +90,11 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
                   <li key={s.id}>
                     <button
                       onMouseDown={() => go(s.id)}
-                      className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-slate-50"
+                      className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-white/[0.05]"
                     >
                       <Avatar initials={initials(s)} color={s.avatarColor} size="sm" />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-slate-900">
+                        <p className="truncate text-sm font-medium text-slate-100">
                           {fullName(s)}
                         </p>
                         <p className="text-xs text-slate-500">
@@ -113,21 +113,22 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
 
       <div className="ml-auto flex items-center gap-2">
         <button
-          className="relative rounded-lg p-2 text-slate-500 hover:bg-slate-100"
+          className="relative rounded-lg p-2 text-slate-400 hover:bg-white/[0.06] hover:text-white"
           aria-label="Notifications"
         >
           <Bell className="h-5 w-5" />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" />
+          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white ring-2 ring-[#0a0f1b]">3</span>
         </button>
         <Link
           href="/settings"
-          className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-slate-100"
+          className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-white/[0.06]"
         >
           <Avatar initials="JM" color={currentUser.avatarColor} size="sm" />
           <div className="hidden text-left leading-tight sm:block">
-            <p className="text-sm font-medium text-slate-900">{currentUser.name}</p>
+            <p className="text-sm font-medium text-slate-100">{currentUser.name}</p>
             <p className="text-xs capitalize text-slate-500">{currentUser.role}</p>
           </div>
+          <ChevronDown className="hidden h-4 w-4 text-slate-500 md:block" />
         </Link>
       </div>
     </header>

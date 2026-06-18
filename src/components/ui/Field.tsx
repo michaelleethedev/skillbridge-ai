@@ -15,7 +15,7 @@ export function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <label htmlFor={htmlFor} className="block text-sm font-medium text-slate-700">
+      <label htmlFor={htmlFor} className="block text-sm font-medium text-slate-300">
         {label}
       </label>
       {children}
@@ -29,7 +29,7 @@ export function Field({
 }
 
 const baseInput =
-  "block w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-colors";
+  "block w-full rounded-lg border bg-white/[0.035] px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/70 transition-colors";
 
 export function Input({
   className,
@@ -38,7 +38,7 @@ export function Input({
 }: React.InputHTMLAttributes<HTMLInputElement> & { invalid?: boolean }) {
   return (
     <input
-      className={cn(baseInput, invalid ? "border-rose-400" : "border-slate-300", className)}
+      className={cn(baseInput, invalid ? "border-rose-400" : "border-white/[0.10]", className)}
       {...props}
     />
   );
@@ -51,7 +51,7 @@ export function Textarea({
 }: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { invalid?: boolean }) {
   return (
     <textarea
-      className={cn(baseInput, invalid ? "border-rose-400" : "border-slate-300", className)}
+      className={cn(baseInput, invalid ? "border-rose-400" : "border-white/[0.10]", className)}
       {...props}
     />
   );
@@ -65,7 +65,7 @@ export function Select({
 }: React.SelectHTMLAttributes<HTMLSelectElement> & { invalid?: boolean }) {
   return (
     <select
-      className={cn(baseInput, invalid ? "border-rose-400" : "border-slate-300", className)}
+      className={cn(baseInput, invalid ? "border-rose-400" : "border-white/[0.10]", className)}
       {...props}
     >
       {children}

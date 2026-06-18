@@ -7,8 +7,8 @@ const variants: Record<Variant, string> = {
   primary:
     "bg-brand-gradient text-white hover:brightness-110 focus-visible:ring-brand-500 shadow-sm shadow-brand-600/20",
   secondary:
-    "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 hover:border-slate-400 focus-visible:ring-brand-500 shadow-soft",
-  ghost: "text-slate-600 hover:bg-slate-100 focus-visible:ring-brand-500",
+    "bg-white/[0.045] text-slate-300 border border-white/10 hover:bg-white/[0.075] hover:border-white/20 hover:text-white focus-visible:ring-brand-500",
+  ghost: "text-slate-400 hover:bg-white/[0.06] hover:text-white focus-visible:ring-brand-500",
   danger:
     "bg-rose-600 text-white hover:bg-rose-700 focus-visible:ring-rose-500 shadow-sm",
 };
@@ -33,7 +33,7 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+        "inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50",
         variants[variant],
         sizes[size],
         className,
