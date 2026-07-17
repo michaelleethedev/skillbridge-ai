@@ -7,7 +7,7 @@ import { navItems } from "./nav";
 import { cn } from "@/lib/utils";
 
 function isActive(href: string, pathname: string) {
-  if (href === "/") return pathname === "/";
+  if (href === "/demo") return pathname === "/demo";
   return pathname === href || pathname.startsWith(href + "/");
 }
 
@@ -35,15 +35,18 @@ export function Sidebar({
   const content = (
     <div className="flex h-full flex-col">
       <div className="flex h-16 items-center gap-2.5 border-b border-white/[0.07] px-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 text-white shadow-lg shadow-blue-600/20">
-          <GraduationCap className="h-5 w-5" />
-        </div>
-        <div className="leading-tight">
-          <p className="text-[15px] font-bold tracking-tight text-white">SkillBridge AI</p>
-          <p className="text-[11px] font-medium text-slate-500">Student Intelligence</p>
-        </div>
+        <Link href="/" onClick={onClose} className="flex min-w-0 items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 text-white shadow-lg shadow-blue-600/20">
+            <GraduationCap className="h-5 w-5" />
+          </div>
+          <div className="leading-tight">
+            <p className="text-[15px] font-bold tracking-tight text-white">SkillBridge AI</p>
+            <p className="text-[11px] font-medium text-slate-500">Student Intelligence</p>
+          </div>
+        </Link>
         <button
           onClick={onClose}
+          type="button"
           className="ml-auto rounded-lg p-1.5 text-slate-500 hover:bg-white/[0.06] hover:text-white lg:hidden"
           aria-label="Close menu"
         >

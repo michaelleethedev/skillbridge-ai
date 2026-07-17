@@ -20,16 +20,13 @@ import {
   Loader2,
   CalendarClock,
   FileText,
+  Archive,
+  Undo2,
 } from "lucide-react";
 import type { Grade, Student, Subject, SupportLevel } from "@/types";
 import type { InsightCategory } from "@/data";
-import {
-  students as seedStudents,
-  fullName,
-  initials,
-  getDashboardStats,
-  getProgramInsightCards,
-} from "@/data";
+import { fullName, initials, getProgramInsightCards } from "@/data";
+import { useDemo, studentIsArchived } from "@/components/demo/DemoProvider";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
@@ -78,30 +75,39 @@ function nextStepFor(student: Student): string {
 }
 
 export default function StudentsPage() {
-  const [students, setStudents] = useState<Student[]>(seedStudents);
+  const demo = useDemo();
+  const students = demo.students;
   const [query, setQuery] = useState("");
   const [grade, setGrade] = useState<string>("all");
   const [subject, setSubject] = useState<string>("all");
   const [level, setLevel] = useState<string>("all");
+  const [sort, setSort] = useState<string>("recent");
+  const [showArchived, setShowArchived] = useState(false);
   const [view, setView] = useState<"table" | "grid">("table");
   const [addOpen, setAddOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return students.filter((s) => {
+    const matches = students.filter((s) => {
+      if (!showArchived && studentIsArchived(s)) return false;
       if (q && !fullName(s).toLowerCase().includes(q)) return false;
       if (grade !== "all" && s.grade !== Number(grade)) return false;
       if (subject !== "all" && s.subjectFocus !== subject) return false;
       if (level !== "all" && s.supportLevel !== level) return false;
       return true;
     });
-  }, [students, query, grade, subject, level]);
+    return matches.sort((a, b) => {
+      if (sort === "name") return fullName(a).localeCompare(fullName(b));
+      if (sort === "progress") return a.averageMastery - b.averageMastery;
+      return +new Date(b.lastSessionOn) - +new Date(a.lastSessionOn);
+    });
+  }, [students, query, grade, subject, level, sort, showArchived]);
 
   const [planLoading, setPlanLoading] = useState(false);
   const [weeklyPlan, setWeeklyPlan] = useState<{ name: string; step: string }[] | null>(null);
 
   const handleAdd = (student: Student) => {
-    setStudents((prev) => [student, ...prev]);
+    demo.addStudent(student);
     setAddOpen(false);
   };
 
@@ -110,23 +116,25 @@ export default function StudentsPage() {
     setGrade("all");
     setSubject("all");
     setLevel("all");
+    setSort("recent");
   };
 
   const filtersActive =
-    query !== "" || grade !== "all" || subject !== "all" || level !== "all";
+    query !== "" || grade !== "all" || subject !== "all" || level !== "all" || sort !== "recent";
 
   // Summary metrics derived from the (live) student list.
   const summary = useMemo(() => {
-    const total = students.length;
-    const highPriority = students.filter((s) => s.supportLevel === "High Priority").length;
+    const active = students.filter((s) => !studentIsArchived(s));
+    const total = active.length;
+    const highPriority = active.filter((s) => s.supportLevel === "High Priority").length;
     const avgMastery = Math.round(
-      students.reduce((sum, s) => sum + s.averageMastery, 0) / Math.max(1, total),
+      active.reduce((sum, s) => sum + s.averageMastery, 0) / Math.max(1, total),
     );
     return { total, highPriority, avgMastery };
   }, [students]);
 
   const router = useRouter();
-  const sessionsThisWeek = getDashboardStats().sessionsThisWeek;
+  const sessionsThisWeek = demo.dashboardStats.sessionsThisWeek;
   const insights = getProgramInsightCards();
 
   // "AI" weekly plan: prioritize the students who need the most attention.
@@ -243,6 +251,13 @@ export default function StudentsPage() {
                   ))}
                 </Select>
               </FilterField>
+              <FilterField label="Sort">
+                <Select value={sort} onChange={(e) => setSort(e.target.value)} className="h-10">
+                  <option value="recent">Recent activity</option>
+                  <option value="name">Name</option>
+                  <option value="progress">Lowest progress</option>
+                </Select>
+              </FilterField>
             </div>
 
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3">
@@ -257,6 +272,14 @@ export default function StudentsPage() {
                     Reset
                   </Button>
                 )}
+                <button
+                  type="button"
+                  onClick={() => setShowArchived((value) => !value)}
+                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.035] px-3 text-xs font-semibold text-slate-400 transition hover:bg-white/[0.07] hover:text-white"
+                >
+                  {showArchived ? <Undo2 className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
+                  {showArchived ? "Hide archived" : "Show archived"}
+                </button>
                 <div className="flex rounded-lg border border-slate-200 bg-slate-50 p-0.5">
                   <button
                     onClick={() => setView("table")}
@@ -359,14 +382,27 @@ export default function StudentsPage() {
                           </span>
                         </td>
                         <td className="px-5 py-4 text-right">
-                          <Link
-                            href={`/students/${s.id}`}
-                            onClick={(e) => e.stopPropagation()}
-                            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-all hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
-                          >
-                            View profile
-                            <ChevronRight className="h-3.5 w-3.5" />
-                          </Link>
+                          <div className="inline-flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                studentIsArchived(s) ? demo.restoreStudent(s.id) : demo.archiveStudent(s.id);
+                              }}
+                              className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-xs font-medium text-slate-400 transition-all hover:bg-white/[0.08] hover:text-white"
+                            >
+                              {studentIsArchived(s) ? <Undo2 className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
+                              {studentIsArchived(s) ? "Restore" : "Archive"}
+                            </button>
+                            <Link
+                              href={`/students/${s.id}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-all hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
+                            >
+                              View
+                              <ChevronRight className="h-3.5 w-3.5" />
+                            </Link>
+                          </div>
                         </td>
                       </tr>
                     ))}

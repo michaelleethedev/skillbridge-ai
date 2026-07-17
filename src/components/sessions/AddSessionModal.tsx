@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import type { Session, Subject } from "@/types";
-import { students, fullName, currentUser } from "@/data";
+import { fullName, currentUser } from "@/data";
+import { useDemo } from "@/components/demo/DemoProvider";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
@@ -38,6 +39,7 @@ export function AddSessionModal({
   onClose: () => void;
   onAdd: (session: Session) => void;
 }) {
+  const { students } = useDemo();
   const [form, setForm] = useState<FormState>(initialForm);
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [submitting, setSubmitting] = useState(false);

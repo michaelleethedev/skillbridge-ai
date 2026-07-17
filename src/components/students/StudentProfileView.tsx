@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   Plus,
@@ -17,6 +18,7 @@ import {
   Mail,
   CalendarDays,
   CalendarClock,
+  CalendarCheck,
   Clock,
   Flame,
   BookOpen,
@@ -29,6 +31,8 @@ import {
   TrendingDown,
   Minus,
   Loader2,
+  Compass,
+  Route,
 } from "lucide-react";
 import type { Goal, Session, Student, Subject } from "@/types";
 import type { GapAnalysis, ProfilePracticePlan, StudentOverview, StudentSummary } from "@/data";
@@ -42,6 +46,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { SkillMasteryChart } from "@/components/charts/SkillMasteryChart";
 import { cn, masteryColor, formatDate, formatShortDate, goalStatusStyles } from "@/lib/utils";
+import { useDemo } from "@/components/demo/DemoProvider";
 
 const SUBJECTS: Subject[] = ["Reading", "Math", "Writing", "Phonics", "Science"];
 
@@ -64,8 +69,8 @@ export interface StudentProfileViewProps {
 }
 
 export function StudentProfileView({
-  student,
-  skills,
+  student: initialStudent,
+  skills: initialSkills,
   sessions: initialSessions,
   goals,
   overview,
@@ -74,7 +79,20 @@ export function StudentProfileView({
   summary,
   tutorName,
 }: StudentProfileViewProps) {
-  const [sessions, setSessions] = useState<Session[]>(initialSessions);
+  const demo = useDemo();
+  const searchParams = useSearchParams();
+  const guidedTour = searchParams.get("tour") === "1";
+  const student = demo.getStudentById(initialStudent.id) ?? initialStudent;
+  const liveSkills = demo.getStudentSkills(student.id).map((s) => ({
+    name: s.skill?.name ?? "Skill",
+    mastery: s.mastery,
+    previousMastery: s.previousMastery,
+  }));
+  const skills = liveSkills.length ? liveSkills : initialSkills;
+  const sessions = demo.getStudentSessions(student.id);
+  const displaySessions = sessions.length ? sessions : initialSessions;
+  const savedPlans = demo.getStudentPracticePlans(student.id);
+  const savedReports = demo.getStudentProgressReports(student.id);
   const [addOpen, setAddOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -124,7 +142,7 @@ export function StudentProfileView({
   };
 
   const handleAddSession = (s: Session) => {
-    setSessions((prev) => [s, ...prev]);
+    demo.addSession(s);
     setAddOpen(false);
     flash("Session added to the timeline.");
   };
@@ -138,6 +156,8 @@ export function StudentProfileView({
         <ArrowLeft className="h-4 w-4" />
         Back to students
       </Link>
+
+      {guidedTour && <StudentTourBanner student={student} onAddSession={() => setAddOpen(true)} />}
 
       {/* Profile header */}
       <Card className="overflow-hidden">
@@ -200,6 +220,8 @@ export function StudentProfileView({
         </div>
       </Card>
 
+      <StudentWorkflowBar student={student} onAddSession={() => setAddOpen(true)} />
+
       {/* Overview cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <OverviewCard
@@ -236,10 +258,10 @@ export function StudentProfileView({
         {/* Left column */}
         <div className="space-y-4 lg:col-span-2">
           {/* Skill mastery */}
-          <Card>
+          <Card id="skills" className="scroll-mt-24">
             <CardHeader
               title="Skill mastery"
-              subtitle="Current mastery and change since the last assessment"
+              subtitle="Current mastery and change since the last assessment. Use +5 / -5 to demo a skill update."
             />
             <CardBody>
               <SkillMasteryChart data={chartData} />
@@ -250,9 +272,23 @@ export function StudentProfileView({
                     <div key={s.name} className="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5">
                       <span className="truncate text-sm text-slate-600">{s.name}</span>
                       <span className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => demo.updateSkillMastery(student.id, s.name, Math.max(0, s.mastery - 5))}
+                          className="rounded-md border border-white/10 bg-white/[0.035] px-2 py-1 text-[10px] font-semibold text-slate-400 transition hover:bg-white/[0.07] hover:text-white"
+                        >
+                          -5
+                        </button>
                         <span className={cn("text-sm font-semibold tabular-nums", masteryColor(s.mastery))}>
                           {s.mastery}%
                         </span>
+                        <button
+                          type="button"
+                          onClick={() => demo.updateSkillMastery(student.id, s.name, Math.min(100, s.mastery + 5))}
+                          className="rounded-md border border-white/10 bg-white/[0.035] px-2 py-1 text-[10px] font-semibold text-slate-400 transition hover:bg-white/[0.07] hover:text-white"
+                        >
+                          +5
+                        </button>
                         <DeltaPill delta={delta} />
                       </span>
                     </div>
@@ -291,10 +327,10 @@ export function StudentProfileView({
           )}
 
           {/* Recent sessions */}
-          <Card>
+          <Card id="sessions" className="scroll-mt-24">
             <CardHeader
               title="Recent sessions"
-              subtitle={`${sessions.length} session${sessions.length === 1 ? "" : "s"} on record`}
+              subtitle={`${displaySessions.length} session${displaySessions.length === 1 ? "" : "s"} on record`}
               action={
                 <button
                   onClick={() => setAddOpen(true)}
@@ -307,7 +343,7 @@ export function StudentProfileView({
             />
             <CardBody className="space-y-0">
               <ol className="relative space-y-5 before:absolute before:left-[7px] before:top-1 before:h-full before:w-px before:bg-slate-200">
-                {sessions.map((s) => (
+                {displaySessions.map((s) => (
                   <li key={s.id} className="relative pl-7">
                     <span
                       className={cn(
@@ -348,7 +384,7 @@ export function StudentProfileView({
 
           {/* AI Practice Plan */}
           {plan && (
-            <Card className="overflow-hidden ring-1 ring-brand-100">
+            <Card id="practice-plan" className="scroll-mt-24 overflow-hidden ring-1 ring-brand-100">
               <div className="flex flex-wrap items-center justify-between gap-2 bg-gradient-to-r from-brand-50 to-white px-5 py-3.5">
                 <div className="flex items-center gap-2">
                   <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-600 text-white">
@@ -375,6 +411,23 @@ export function StudentProfileView({
                     <span className="font-semibold text-brand-700">Next session focus:</span> {plan.nextSessionFocus}
                   </p>
                 </div>
+              </CardBody>
+            </Card>
+          )}
+
+          {savedPlans.length > 0 && (
+            <Card id="saved-plans" className="scroll-mt-24">
+              <CardHeader title="Saved practice plans" subtitle="Plans created during this demo session" />
+              <CardBody className="space-y-3">
+                {savedPlans.slice(0, 4).map((saved) => (
+                  <div key={saved.id} className="rounded-xl border border-white/[0.08] bg-white/[0.035] p-3.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-slate-100">{saved.skillFocus}</p>
+                      <span className="text-[11px] text-slate-500">{formatShortDate(saved.createdOn)}</span>
+                    </div>
+                    <p className="mt-2 text-sm text-slate-500">{saved.nextSessionFocus}</p>
+                  </div>
+                ))}
               </CardBody>
             </Card>
           )}
@@ -458,7 +511,7 @@ export function StudentProfileView({
 
           {/* Parent / admin summary */}
           {summary && (
-            <Card className="overflow-hidden">
+            <Card id="summary" className="scroll-mt-24 overflow-hidden">
               <div className="flex items-center justify-between gap-2 bg-gradient-to-r from-brand-50 to-white px-5 py-3.5">
                 <div className="flex items-center gap-2">
                   <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-600 text-white">
@@ -495,6 +548,23 @@ export function StudentProfileView({
               </CardBody>
             </Card>
           )}
+
+          {savedReports.length > 0 && (
+            <Card id="reports-history" className="scroll-mt-24">
+              <CardHeader title="Reports history" subtitle="Progress reports saved in this browser" />
+              <CardBody className="space-y-3">
+                {savedReports.slice(0, 4).map((report) => (
+                  <div key={report.id} className="rounded-xl border border-white/[0.08] bg-white/[0.035] p-3.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-slate-100">{report.period}</p>
+                      <span className="text-[11px] text-slate-500">{formatShortDate(report.createdOn)}</span>
+                    </div>
+                    <p className="mt-2 text-sm text-slate-500">{report.recentProgress}</p>
+                  </div>
+                ))}
+              </CardBody>
+            </Card>
+          )}
         </div>
       </div>
 
@@ -518,6 +588,99 @@ export function StudentProfileView({
 }
 
 /* ----------------------------- helper bits ----------------------------- */
+
+function StudentTourBanner({
+  student,
+  onAddSession,
+}: {
+  student: Student;
+  onAddSession: () => void;
+}) {
+  return (
+    <Card className="overflow-hidden border-blue-400/20 bg-gradient-to-br from-blue-500/10 via-[#101827] to-[#0d1422]">
+      <div className="grid grid-cols-1 gap-4 p-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+        <div>
+          <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-blue-300">
+            <Compass className="h-3.5 w-3.5" />
+            Guided tour step 2 of 6
+          </div>
+          <h2 className="text-lg font-semibold text-white">Review {student.firstName}&apos;s student workspace</h2>
+          <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-500">
+            This profile is the demo hub: review progress, update a skill, log a session, run AI analysis, generate a practice plan, and create a parent/admin report.
+          </p>
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
+          <button
+            type="button"
+            onClick={onAddSession}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-xs font-semibold text-white transition hover:bg-blue-500"
+          >
+            <Plus className="h-4 w-4" />
+            Log next session
+          </button>
+          <Link
+            href={`/ai-reports?student=${student.id}`}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.045] px-4 text-xs font-semibold text-slate-200 transition hover:bg-white/[0.075]"
+          >
+            <Sparkles className="h-4 w-4" />
+            Analyze gap
+          </Link>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function StudentWorkflowBar({
+  student,
+  onAddSession,
+}: {
+  student: Student;
+  onAddSession: () => void;
+}) {
+  const actions = [
+    { label: "Skills", href: "#skills", icon: Target },
+    { label: "Sessions", href: "#sessions", icon: CalendarCheck },
+    { label: "AI analysis", href: `/ai-reports?student=${student.id}`, icon: Sparkles },
+    { label: "Practice plan", href: `/practice-plans?student=${student.id}`, icon: ClipboardCheck },
+    { label: "Report", href: "/reports", icon: FileText },
+  ];
+
+  return (
+    <div className="sticky top-16 z-20 rounded-2xl border border-white/[0.08] bg-[#0a0f1b]/95 p-2 shadow-2xl shadow-black/20 backdrop-blur-xl">
+      <div className="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
+        <div className="flex items-center gap-2 px-2 text-xs text-slate-500">
+          <Route className="h-4 w-4 text-cyan-300" />
+          <span className="font-semibold text-slate-300">Recommended workflow</span>
+          <span className="hidden sm:inline">Review skills, save a session, generate AI output, then build a report.</span>
+        </div>
+        <div className="flex gap-2 overflow-x-auto pb-1 xl:pb-0">
+          <button
+            type="button"
+            onClick={onAddSession}
+            className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3 text-xs font-semibold text-white transition hover:bg-blue-500"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Log session
+          </button>
+          {actions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <Link
+                key={action.label}
+                href={action.href}
+                className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 text-xs font-semibold text-slate-300 transition hover:bg-white/[0.075] hover:text-white"
+              >
+                <Icon className="h-3.5 w-3.5 text-blue-300" />
+                {action.label}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function initials(s: { firstName: string; lastName: string }) {
   return `${s.firstName[0] ?? ""}${s.lastName[0] ?? ""}`.toUpperCase();

@@ -20,7 +20,6 @@ import {
   Target,
   TrendingUp,
   TrendingDown,
-  Minus,
   Clock,
   BookOpen,
   Lightbulb,
@@ -31,15 +30,10 @@ import {
 } from "lucide-react";
 import type { Subject } from "@/types";
 import {
-  students,
-  studentsById,
   fullName,
-  getStudentSkills,
-  getStudentSessions,
-  getStudentNextStep,
-  getStudentTrend,
-  getStudentOverview,
+  currentUser,
 } from "@/data";
+import { useDemo } from "@/components/demo/DemoProvider";
 import { Card, CardHeader, CardBody } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Field, Select, Input, Textarea } from "@/components/ui/Field";
@@ -95,6 +89,9 @@ interface SavedPlan {
 }
 
 export function PracticePlanGenerator() {
+  const demo = useDemo();
+  const { students } = demo;
+  const studentsById = Object.fromEntries(students.map((s) => [s.id, s]));
   const searchParams = useSearchParams();
   const initialStudent = searchParams.get("student") ?? "";
   
@@ -122,11 +119,25 @@ export function PracticePlanGenerator() {
   };
 
   const student = studentId ? studentsById[studentId] : null;
-  const overview = studentId ? getStudentOverview(studentId) : null;
-  const trend = studentId ? getStudentTrend(studentId) : null;
+  const studentSkills = studentId ? demo.getStudentSkills(studentId) : [];
+  const overview = student
+    ? {
+        mastery: student.averageMastery,
+        mainGap: student.needsSupport[0] ?? student.subjectFocus,
+        nextStep: student.needsSupport[0] ? `Practice ${student.needsSupport[0]}` : "Ready for next skill",
+        sessionsCompleted: demo.getStudentSessions(student.id).length,
+      }
+    : null;
+  const trend: "Improving" | "Declining" | "Ready for next skill" | null = student
+    ? student.averageMastery >= 78
+      ? "Ready for next skill"
+      : student.averageMastery >= 55
+        ? "Improving"
+        : "Declining"
+    : null;
 
   const suggestions = studentId
-    ? getStudentSkills(studentId)
+    ? studentSkills
         .sort((a, b) => a.mastery - b.mastery)
         .slice(0, 3)
         .map((s) => s.skill?.name ?? "")
@@ -182,6 +193,19 @@ export function PracticePlanGenerator() {
       createdOn: new Date().toISOString(),
     };
     setSaved((prev) => [savedPlan, ...prev]);
+    if (studentId) {
+      demo.savePracticePlan({
+        id: savedPlan.id,
+        studentId,
+        createdOn: savedPlan.createdOn,
+        skillFocus: plan.skillFocus,
+        warmUp: plan.activities[0]?.activity ?? plan.goal,
+        guidedPractice: plan.activities[1]?.activity ?? plan.goal,
+        independentPractice: plan.activities[2]?.activity ?? "Complete targeted practice.",
+        exitTicket: plan.exitTicket,
+        nextSessionFocus: plan.activities.at(-1)?.purpose ?? `Continue ${plan.skillFocus}.`,
+      });
+    }
     flash("Plan saved to history.");
   };
 
@@ -222,7 +246,22 @@ export function PracticePlanGenerator() {
   };
 
   const startSession = () => {
-    flash("Session started (demo placeholder).");
+    if (!plan || !studentId) {
+      flash("Select a student and generate a plan first.");
+      return;
+    }
+    demo.addSession({
+      id: `sess-${Date.now()}`,
+      studentId,
+      tutorName: currentUser.name,
+      date: new Date().toISOString().slice(0, 10),
+      subject: plan.subject,
+      skillFocus: plan.skillFocus,
+      notes: `Started practice plan: ${plan.goal}`,
+      performanceScore: Math.max(55, Math.min(92, Math.round(plan.confidence - 8))),
+      nextSteps: plan.activities.at(-1)?.purpose ?? `Continue ${plan.skillFocus}.`,
+    });
+    flash("Tutoring session started and added to the student timeline.");
   };
 
   return (
@@ -477,7 +516,6 @@ export function PracticePlanGenerator() {
                 <div className="mt-1 flex items-center gap-2">
                   {trend === "Improving" && <TrendingUp className="h-4 w-4 text-emerald-600" />}
                   {trend === "Declining" && <TrendingDown className="h-4 w-4 text-rose-600" />}
-                  {trend === "No recent session" && <Minus className="h-4 w-4 text-slate-400" />}
                   <span className="text-sm text-slate-700">{trend}</span>
                 </div>
               </div>

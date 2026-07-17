@@ -1,8 +1,8 @@
 # SkillBridge AI
 
-> A full-stack EdTech SaaS prototype that helps tutors and education programs track student progress, analyze tutoring session notes, identify learning gaps, and generate personalized learning recommendations using AI.
+> An interactive EdTech SaaS portfolio demo that helps tutors and education programs track student progress, analyze tutoring session notes, identify learning gaps, generate practice plans, and create parent/admin reports using AI-assisted workflows.
 
-SkillBridge AI includes student profiles, skill-mastery tracking, progress dashboards, AI-generated practice plans, and exportable parent/admin reports — all built on realistic demo data with a clean, component-driven architecture.
+SkillBridge AI includes a recruiter-friendly landing page, guided demo workflow, role switching, student profiles, skill-mastery tracking, progress dashboards, AI-generated practice plans, and parent/admin reports — all built on realistic fictional data with a clean, component-driven architecture.
 
 ![Dashboard](docs/screenshots/dashboard.png)
 
@@ -30,7 +30,7 @@ SkillBridge AI includes student profiles, skill-mastery tracking, progress dashb
 
 SkillBridge AI is a modern SaaS dashboard for tutoring programs. It centralizes everything a tutor or program admin needs: a real-time progress dashboard, a searchable student roster, detailed student profiles, session logging, skill-mastery analytics, and AI tools that turn rough session notes into structured, actionable plans and parent-ready summaries.
 
-The app is intentionally built like a real product — with empty states, loading states, form validation, responsive layouts, and a typed data layer that mirrors a production Supabase schema.
+The app is intentionally built like a real product and a portfolio-ready demo: it has a polished landing page, an interactive demo workspace at `/demo`, role-based demo paths, local state persistence, empty states, loading states, form validation, responsive layouts, and a typed data layer that mirrors a production Supabase schema.
 
 ## The Problem
 
@@ -46,21 +46,26 @@ Tutors and small education programs juggle progress tracking across spreadsheets
 SkillBridge AI brings it all into one polished workspace:
 
 - A **dashboard** that surfaces who needs attention and what to do next.
+- A **guided portfolio demo** that shows visitors the core workflow in a few minutes.
+- A **role switcher** for Tutor, Program Lead, and Administrator views.
 - **Student profiles** with skill-mastery charts, goals, and history at a glance.
 - An **AI Learning Gap Analyzer** that reads a rough note and returns the detected gap, likely cause, recommended next step, a hands-on practice activity, a parent-friendly update, and a tutor action plan.
 - A **Practice Plan Generator** that produces a structured 5-part lesson around any skill.
-- **Exportable reports** for parents and admins.
+- **Interactive reports** for parents, tutors, students, and administrators.
 
 ## Features
 
-- **Dashboard** — total students, students needing support, sessions this week, average skill mastery, AI-generated action items, an attention queue, and charts for skill mastery by subject, session performance trend, and students by support level.
-- **Students** — searchable, filterable roster (by grade, subject, support level) with table and grid views, status labels (On Track, Improving, Needs Support, High Priority), and an Add Student modal with validation.
-- **Student Profile** — strengths, needs-support areas, skill-mastery chart, recent sessions, AI recommendations, learning goals with progress, and a parent/admin summary.
-- **Sessions** — log session notes with date, subject, skill focus, performance score, and next steps; filter and review session history.
+- **Landing Page** — clear product positioning, user types, AI workflow overview, tech stack, and direct Launch Demo / Start Guided Tour actions.
+- **Guided Demo Workspace** — `/demo` includes a walkthrough checklist, role-specific quick actions, live metrics, and a floating Demo Guide for easy navigation.
+- **Role Switcher** — Tutor, Program Lead, and Administrator perspectives change the framing and recommended workflow paths.
+- **Dashboard** — total students, students needing support, sessions this week, average skill mastery, saved AI outputs, AI-generated action items, an attention queue, and charts.
+- **Students** — searchable, filterable, sortable roster with table and grid views, status labels, add student flow, and archive/restore actions.
+- **Student Profile** — strengths, needs-support areas, skill-mastery chart, quick mastery updates, recent sessions, saved AI recommendations, saved practice plans, report history, learning goals, and parent/admin summary.
+- **Sessions** — log session notes with date, subject, skill focus, performance score, and next steps; saved sessions update the dashboard, student profile, and activity history.
 - **Skills** — program-wide skill catalog grouped by subject with average mastery and coverage.
-- **AI Reports** — the Learning Gap Analyzer (see below).
-- **Practice Plans** — comprehensive AI-powered practice plan generator with timed session structures (15/30/45/60 min), subject-specific materials, tutor scripts, differentiation tips, exit tickets, and parent summaries. Includes save/copy/export actions and saved plans history.
-- **Reports** — parent/admin progress summaries (coming soon).
+- **AI Reports** — the Learning Gap Analyzer saves personalized analyses back into the demo history.
+- **Practice Plans** — comprehensive AI-powered practice plan generator with timed session structures, subject-specific materials, tutor scripts, differentiation tips, exit tickets, parent summaries, save/copy/export actions, saved plans history, and Start Session.
+- **Reports** — interactive Report Builder for parent progress updates, administrator summaries, tutor session summaries, and student progress reports.
 - **Settings** — profile, notification toggles, and AI/database integration status.
 - **Polish** — responsive layout, sidebar navigation, global search, empty states, loading skeletons, and form validation throughout.
 
@@ -117,6 +122,7 @@ The AI is **mocked but production-shaped**. The logic lives in [`src/lib/ai.ts`]
 - **Charts:** Recharts
 - **Icons:** lucide-react
 - **AI:** OpenAI-ready API routes (mocked by default)
+- **Demo State:** React context + localStorage for cross-page interactivity
 - **Data:** Typed local mock layer, modeled on a Supabase schema
 
 ## Screenshots
@@ -144,7 +150,9 @@ cp .env.example .env.local   # add OPENAI_API_KEY / Supabase keys to go live
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000) for the portfolio landing page.
+
+The interactive product workspace is available at [http://localhost:3000/demo](http://localhost:3000/demo).
 
 ```bash
 npm run build   # production build
@@ -152,7 +160,7 @@ npm run start   # serve the production build
 npm run lint    # lint
 ```
 
-## Demo Login
+## Demo Experience
 
 This prototype ships with a **pre-authenticated demo workspace** — no login required.
 
@@ -161,6 +169,17 @@ This prototype ships with a **pre-authenticated demo workspace** — no login re
 - **Password:** _not required in demo mode_
 
 Authentication is intentionally stubbed so reviewers can explore immediately. The `users` table and roles are modeled for a future Supabase Auth integration.
+
+The demo uses realistic fictional data and persists changes in `localStorage`, so visitors can:
+
+- Switch between Tutor, Program Lead, and Administrator perspectives.
+- Follow the guided walkthrough from dashboard to report creation.
+- Add sessions and see profiles/dashboard metrics update.
+- Adjust skill mastery levels from the student profile.
+- Generate and save AI learning-gap analyses.
+- Generate and save practice plans, then start a demo session from a plan.
+- Build and save parent/admin/tutor/student reports.
+- Reset the demo state from the dashboard when needed.
 
 ## Data Model
 
@@ -185,11 +204,13 @@ Demo data (10 students across grades 1–5, with sessions, skills, goals, and AI
 src/
 ├── app/                  # Next.js App Router pages + API routes
 │   ├── api/              # /analyze and /practice-plan (OpenAI-ready)
+│   ├── demo/             # interactive dashboard workspace
 │   ├── students/         # roster + dynamic [id] profile
 │   ├── sessions/  skills/  ai-reports/  practice-plans/  reports/  settings/
 │   ├── layout.tsx        # root layout (wraps AppShell)
-│   └── page.tsx          # Dashboard
+│   └── page.tsx          # portfolio landing page
 ├── components/
+│   ├── demo/             # demo provider, role switcher, guided workflow, floating guide
 │   ├── layout/           # Sidebar, Header, AppShell, nav config
 │   ├── ui/               # Card, Button, Modal, Badge, Field, etc.
 │   ├── charts/           # Recharts wrappers

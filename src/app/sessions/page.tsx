@@ -4,7 +4,8 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Plus, CalendarCheck, Filter } from "lucide-react";
 import type { Session, Subject } from "@/types";
-import { sessions as seedSessions, students, studentsById, fullName, initials } from "@/data";
+import { fullName, initials } from "@/data";
+import { useDemo } from "@/components/demo/DemoProvider";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
@@ -18,7 +19,9 @@ import { cn, formatDate, masteryColor } from "@/lib/utils";
 const SUBJECTS: Subject[] = ["Reading", "Math", "Writing", "Phonics", "Science"];
 
 export default function SessionsPage() {
-  const [sessions, setSessions] = useState<Session[]>(seedSessions);
+  const demo = useDemo();
+  const { sessions, students } = demo;
+  const studentsById = Object.fromEntries(students.map((s) => [s.id, s]));
   const [studentFilter, setStudentFilter] = useState("all");
   const [subjectFilter, setSubjectFilter] = useState("all");
   const [addOpen, setAddOpen] = useState(false);
@@ -39,7 +42,7 @@ export default function SessionsPage() {
   );
 
   const handleAdd = (session: Session) => {
-    setSessions((prev) => [session, ...prev]);
+    demo.addSession(session);
     setAddOpen(false);
   };
 

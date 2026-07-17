@@ -12,7 +12,7 @@ export default function NotFound() {
       <p className="mt-2 max-w-sm text-sm text-slate-500">
         We couldn&apos;t find what you were looking for. It may have been moved or doesn&apos;t exist.
       </p>
-      <Link href="/" className="mt-6">
+      <Link href="/demo" className="mt-6">
         <Button>Back to dashboard</Button>
       </Link>
     </div>

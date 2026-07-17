@@ -5,11 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Menu, Search, Bell, ChevronDown } from "lucide-react";
 import { students, fullName, initials, currentUser } from "@/data";
+import { RoleSwitcher } from "@/components/demo/DemoDashboardIntro";
+import { useDemo } from "@/components/demo/DemoProvider";
 import { Avatar } from "@/components/ui/Avatar";
 import { SupportLevelBadge } from "@/components/ui/SupportLevelBadge";
 
 export function Header({ onMenuClick }: { onMenuClick: () => void }) {
   const router = useRouter();
+  const demo = useDemo();
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
   const blurTimeout = useRef<ReturnType<typeof setTimeout>>();
@@ -32,7 +35,7 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
-    return students
+    return demo.students
       .filter(
         (s) =>
           fullName(s).toLowerCase().includes(q) ||
@@ -40,7 +43,7 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
           s.supportLevel.toLowerCase().includes(q),
       )
       .slice(0, 6);
-  }, [query]);
+  }, [demo.students, query]);
 
   const go = (id: string) => {
     setQuery("");
@@ -112,6 +115,9 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
       </div>
 
       <div className="ml-auto flex items-center gap-2">
+        <div className="hidden xl:block">
+          <RoleSwitcher compact />
+        </div>
         <button
           className="relative rounded-lg p-2 text-slate-400 hover:bg-white/[0.06] hover:text-white"
           aria-label="Notifications"

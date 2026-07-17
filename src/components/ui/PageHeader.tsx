@@ -15,10 +15,10 @@ export function PageHeader({
           {title}
         </h1>
         {description && (
-          <p className="mt-1.5 text-sm leading-relaxed text-slate-500">{description}</p>
+          <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-slate-500">{description}</p>
         )}
       </div>
-      {action && <div className="flex items-center gap-2">{action}</div>}
+      {action && <div className="flex flex-wrap items-center gap-2">{action}</div>}
     </div>
   );
 }

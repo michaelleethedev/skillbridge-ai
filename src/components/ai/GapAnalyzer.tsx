@@ -20,7 +20,8 @@ import {
   Trash2,
 } from "lucide-react";
 import type { AIReport } from "@/types";
-import { students, fullName } from "@/data";
+import { fullName } from "@/data";
+import { useDemo } from "@/components/demo/DemoProvider";
 import { Card, CardHeader, CardBody } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Field, Select, Textarea } from "@/components/ui/Field";
@@ -46,6 +47,8 @@ const SAMPLE_NOTES = [
 ];
 
 export function GapAnalyzer() {
+  const demo = useDemo();
+  const { students } = demo;
   const searchParams = useSearchParams();
   const initialStudent = searchParams.get("student") ?? "";
 
@@ -112,6 +115,21 @@ export function GapAnalyzer() {
       createdOn: new Date().toISOString(),
     };
     setSaved((prev) => [analysis, ...prev]);
+    if (studentId) {
+      demo.saveAIReport({
+        id: analysis.id,
+        studentId,
+        createdOn: analysis.createdOn,
+        sourceNote: note,
+        detectedGap: result.detectedGap,
+        likelyCause: result.likelyCause,
+        recommendedNextStep: result.recommendedNextStep,
+        practiceActivity: result.practiceActivity,
+        parentUpdate: result.parentUpdate,
+        tutorActionPlan: result.tutorActionPlan,
+        confidence: result.confidence,
+      });
+    }
     flash("Analysis saved to history.");
   };
 
